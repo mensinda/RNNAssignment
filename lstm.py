@@ -85,7 +85,9 @@ def forward(inputs, targets, memory):
 
     # Here you should allocate some variables to store the activations during forward
     # One of them here is to store the hiddens and the cells
-    hs, cs = {}
+    # xs: characters at timesteps
+    # hs: hidden states at timesteps
+    hs, cs, xs, zs, wes = {}, {}, {}, {}, {}
 
     hs[-1] = np.copy(hprev)
     cs[-1] = np.copy(cprev)
@@ -93,7 +95,8 @@ def forward(inputs, targets, memory):
     loss = 0
     # forward pass
     for t in range(len(inputs)):
-        xs[t] = np.zeros((vocab_size,1)) # encode in 1-of-k representation
+        # encode in 1-of-k representation (one hot vector)
+        xs[t] = np.zeros((vocab_size,1))
         xs[t][inputs[t]] = 1
 
         # convert word indices to word embeddings
