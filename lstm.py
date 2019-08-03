@@ -203,12 +203,12 @@ def backward(activations, clipping=True):
 
         # Calculate pre activation dh in regards to o_gate first
         # h = o_gate * tanh(c_new)
-        dh_o = dsigmoid(zs[t]) * dh * np.tanh(cs[t])
+        dh_o = dsigmoid(o_gate[t]) * dh * np.tanh(cs[t])
 
         # Calculate pre activation dh in regards to c_new next
         # h = o_gate * tanh(c_new)
         # dcnext is added for compensating influence of last c
-        dh_c = o_gate * dh * dtanh(cs[t]) + dcnext
+        dh_c = o_gate[t] * dh * dtanh(cs[t]) + dcnext
 
         # Next, derive c_new = f_gate * prev_c + i_gate * \hat{c}
         # ---------
@@ -225,10 +225,10 @@ def backward(activations, clipping=True):
         dc_c = dtanh(c_cand[t]) * i_gate[t] * dh_c
 
         # Update the gate weights
-        dWo += np.dot(zs[t].T, dh_o)
-        dWf += np.dot(zs[t].T, dc_f)
-        dWi += np.dot(zs[t].T, dc_i)
-        dWc += np.dot(zs[t].T, dc_c)
+        dWo += np.dot(dh_o, zs[t].T)
+        dWf += np.dot(dc_f, zs[t].T)
+        dWi += np.dot(dc_i, zs[t].T)
+        dWc += np.dot(dc_c, zs[t].T)
 
         # Update remaining biases
         dbo += dh_o
@@ -288,7 +288,7 @@ def sample(memory, seed_ix, n):
 
         # output gate
         # o_gate = sigmoid (Wo \cdot [h X] + b_o)
-        o_gate = sigmoid(np.dot(Wo, zs[t]) + bo)
+        o_gate = sigmoid(np.dot(Wo, zs) + bo)
 
         # new hidden state for the LSTM
         # h = o_gate * tanh(c_new)
