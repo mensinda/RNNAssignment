@@ -18,13 +18,11 @@ def sigmoid(x):
 
 # The derivative of the sigmoid function
 def dsigmoid(y):
-    y = sigmoid(y)
     return y * (1 - y)
 
 
 # The derivative of the tanh function
 def dtanh(x):
-    x = np.tanh(x)
     return 1 - x*x
 
 
