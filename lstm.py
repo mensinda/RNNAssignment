@@ -197,9 +197,20 @@ def backward(activations, clipping=True):
         dWhy += np.dot(do, hs[t].T)
         dby += do
 
-        dhnext = np.dot(Why.T, do) + dhnext
+        # h is connected to both o and the next h,
+        # sum up gradients
+        dh = np.dot(Why.T, do) + dhnext
 
-        # next, since  h = o_gate * tanh(c_new)
+        # Calculate pre activation dh in regards to o_gate first
+        # h = o_gate * tanh(c_new)
+        dh_o = dsigmoid(zs[t]) * dh * np.tanh(cs[t]) 
+
+        # Calculate pre activation dh in regards to c_new next
+        # h = o_gate * tanh(c_new)
+        # dcnext is added
+        dh_c = o_gate * dh * dtanh(cs[t]) + dcnext
+
+        
 
 
     if clipping:
