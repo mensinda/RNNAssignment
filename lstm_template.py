@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Minimal character-level LSTM model. Written by Ngoc Quan Pham
 Code structure borrowed from the Vanilla RNN model from Andreij Karparthy @karparthy.
@@ -199,13 +201,13 @@ if option == 'train':
 
     # momentum variables for Adagrad
     mWex, mWhy = np.zeros_like(Wex), np.zeros_like(Why)
-    mby = np.zeros_like(by) 
+    mby = np.zeros_like(by)
 
     mWf, mWi, mWo, mWc = np.zeros_like(Wf), np.zeros_like(Wi), np.zeros_like(Wo), np.zeros_like(Wc)
     mbf, mbi, mbo, mbc = np.zeros_like(bf), np.zeros_like(bi), np.zeros_like(bo), np.zeros_like(bc)
 
     smooth_loss = -np.log(1.0/vocab_size)*seq_length # loss at iteration 0
-    
+
     while True:
         # prepare inputs (we're sweeping from left to right in steps seq_length long)
         if p+seq_length+1 >= len(data) or n == 0:
@@ -260,7 +262,7 @@ elif option == 'gradcheck':
     gradients = backward(activations, clipping=False)
     dWex, dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWhy, dby = gradients
 
-    for weight, grad, name in zip([Wf, Wi, Wo, Wc, bf, bi, bo, bc, Wex, Why, by], 
+    for weight, grad, name in zip([Wf, Wi, Wo, Wc, bf, bi, bo, bc, Wex, Why, by],
                                    [dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWex    , dWhy, dby],
                                    ['Wf', 'Wi', 'Wo', 'Wc', 'bf', 'bi', 'bo', 'bc', 'Wex', 'Why', 'by']):
 
@@ -269,7 +271,7 @@ elif option == 'gradcheck':
 
         print(name)
         for i in range(weight.size):
-      
+
             # evaluate cost at [x + delta] and [x - delta]
             w = weight.flat[i]
             weight.flat[i] = w + delta
