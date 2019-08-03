@@ -220,14 +220,64 @@ def sample(memory, seed_ix, n):
     h, c = memory
     x = np.zeros((vocab_size, 1))
     x[seed_ix] = 1
+    result = []
 
     for t in range(n):
         # IMPLEMENT THE FORWARD FUNCTION ONE MORE TIME HERE
         # BUT YOU DON"T NEED TO STORE THE ACTIVATIONS
-        pass
 
+        # convert word indices to word embeddings
+        wes = np.dot(Wex, x)
 
-    return
+        # LSTM cell operation
+        # first concatenate the input and h
+        # This step is irregular (to save the amount of matrix multiplication we have to do)
+        # I will refer to this vector as [h X]
+        zs = np.row_stack((h, wes))
+
+        # compute the forget gate
+        # f_gate = sigmoid (W_f \cdot [h X] + b_f)
+        f_gate = sigmoid(np.dot(Wf, zs) + bf)
+
+        # compute the input gate
+        # i_gate = sigmoid (W_i \cdot [h X] + b_i)
+        i_gate = sigmoid(np.dot(Wi, zs) + bi)
+
+        # compute the candidate memory
+        # \hat{c} = tanh (W_c \cdot [h X] + b_c])
+        c_cand = np.tanh(np.dot(Wc, zs) + bc)
+
+        # new memory: applying forget gate on the previous memory
+        # and then adding the input gate on the candidate memory
+        # c_new = f_gate * prev_c + i_gate * \hat{c}
+        c = f_gate * c + i_gate * c_cand
+
+        # output gate
+        # o_gate = sigmoid (Wo \cdot [h X] + b_o)
+        o_gate = sigmoid(np.dot(Wo, zs[t]) + bo)
+
+        # new hidden state for the LSTM
+        # h = o_gate * tanh(c_new)
+        h = o_gate * np.tanh(c)
+
+        # o = Why \cdot h + by
+        os = np.dot(Why, h) + by
+
+        # softmax for probabilities for next chars
+        # p = softmax(o)
+        ps = softmax(os)
+
+        ix = np.random.multinomial(1, ps.ravel())
+        for j in range(len(ix)):
+            if ix[j] == 1:
+                index = j
+
+        # Set the next char
+        c = np.zeros((vocab_size, 1))
+        c[index] = 1
+        result += [index]
+
+    return result
 
 if option == 'train':
 
