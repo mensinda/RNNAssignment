@@ -309,8 +309,8 @@ def sample(memory, seed_ix, n):
                 index = j
 
         # Set the next char
-        c = np.zeros((vocab_size, 1))
-        c[index] = 1
+        x = np.zeros((vocab_size, 1))
+        x[index] = 1
         result += [index]
 
     return result
