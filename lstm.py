@@ -188,7 +188,7 @@ def backward(activations, clipping=True):
 
     # back propagation through time starts here
     for t in reversed(range(len(inputs))):
-        
+
         # Same as in elman-rnn, we skip directly to
         # the gradients of the unnormalized scores o
         do = ps[t] - ys[t]
@@ -203,8 +203,7 @@ def backward(activations, clipping=True):
 
         # Calculate pre activation dh in regards to o_gate first
         # h = o_gate * tanh(c_new)
-        dh_o = dsigmoid(zs[t]) * dh * np.tanh(cs[t]) 
-        dbo += dh_o # Update output bias
+        dh_o = dsigmoid(zs[t]) * dh * np.tanh(cs[t])
 
         # Calculate pre activation dh in regards to c_new next
         # h = o_gate * tanh(c_new)
@@ -225,13 +224,17 @@ def backward(activations, clipping=True):
         # \hat{c} = tanh (W_c \cdot [h X] + b_c])
         dc_c = dtanh(c_cand[t]) * i_gate[t] * dh_c
 
-
         # Update the gate weights
-        # TODO Finish
+        dWo += np.dot(zs[t].T, dh_o)
+        dWf += np.dot(zs[t].T, dc_f)
+        dWi += np.dot(zs[t].T, dc_i)
+        dWc += np.dot(zs[t].T, dc_c)
 
         # Update remaining biases
-        # TODO Finish
-
+        dbo += dh_o
+        dbf += dc_f
+        dbi += dc_i
+        dbc += dc_c
 
     if clipping:
         # clip to mitigate exploding gradients
