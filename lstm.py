@@ -88,11 +88,13 @@ def forward(inputs, targets, memory):
     # xs: characters at timesteps
     # cs: memory at timesteps
     # hs: hidden states at timesteps
+    # ys: output layers at timesteps (labels/targets)
+    # ps: probability distributions at timesteps
     # f_gate: forget gate activation at timesteps
-    # i_gate: input gate activation at timesteps 
+    # i_gate: input gate activation at timesteps
     # o_gate: output gate activation at timesteps
     # c_cand: candidate memory at timesteps
-    hs, cs, xs, zs, wes, f_gate, i_gate, o_gate, c_cand = {}, {}, {}, {}, {}, {}, {}, {}, {}
+    hs, cs, xs, zs, wes, os, ps, ys, f_gate, i_gate, o_gate, c_cand = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
 
     hs[-1] = np.copy(hprev)
     cs[-1] = np.copy(cprev)
@@ -145,18 +147,25 @@ def forward(inputs, targets, memory):
         # unnormalized log probabilities for next chars
 
         # o = Why \cdot h + by
+        os[t] = np.dot(Why, hs[t]) + by
 
         # softmax for probabilities for next chars
         # p = softmax(o)
+        ps[t] = softmax(os[t])
 
         # cross-entropy loss
         # cross entropy loss at time t:
         # create an one hot vector for the label y
+        ys[t] = np.zeros((vocab_size, 1))
+        ys[t][targets[t]] = 1
 
         # and then cross-entropy (see the elman-rnn file for the hint)
+        loss_t = np.sum(-np.log(ps[t]) * ys[t])
+        loss += loss_t
 
     # define your activations
     memory = (hs[len(inputs)-1], cs[len(inputs)-1])
+    activations = (hs, cs, xs, zs, wes, os, ps, ys, f_gate, i_gate, o_gate, c_cand)
 
     return loss, activations, memory
 
