@@ -179,6 +179,8 @@ def backward(activations, clipping=True):
     dWf, dWi, dWc, dWo = np.zeros_like(Wf), np.zeros_like(Wi),np.zeros_like(Wc), np.zeros_like(Wo)
     dbf, dbi, dbc, dbo = np.zeros_like(bf), np.zeros_like(bi),np.zeros_like(bc), np.zeros_like(bo)
 
+    hs, cs, xs, zs, wes, os, ps, ys, f_gate, i_gate, o_gate, c_cand = activations
+
     # similar to the hidden states in the vanilla RNN
     # We need to initialize the gradients for these variables
     dhnext = np.zeros_like(hs[0])
@@ -186,9 +188,18 @@ def backward(activations, clipping=True):
 
     # back propagation through time starts here
     for t in reversed(range(len(inputs))):
-        pass
-        # IMPLEMENT YOUR BACKPROP HERE
-        # refer to the file elman_rnn.py for more details
+        
+        # Same as in elman-rnn, we skip directly to
+        # the gradients of the unnormalized scores o
+        do = ps[t] - ys[t]
+
+        # Same as before
+        dWhy += np.dot(do, hs[t].T)
+        dby += do
+
+        dhnext = np.dot(Why.T, do) + dhnext
+
+        # next, since  h = o_gate * tanh(c_new)
 
 
     if clipping:
