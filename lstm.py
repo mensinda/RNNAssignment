@@ -86,8 +86,13 @@ def forward(inputs, targets, memory):
     # Here you should allocate some variables to store the activations during forward
     # One of them here is to store the hiddens and the cells
     # xs: characters at timesteps
+    # cs: memory at timesteps
     # hs: hidden states at timesteps
-    hs, cs, xs, zs, wes = {}, {}, {}, {}, {}
+    # f_gate: forget gate activation at timesteps
+    # i_gate: input gate activation at timesteps 
+    # o_gate: output gate activation at timesteps
+    # c_cand: candidate memory at timesteps
+    hs, cs, xs, zs, wes, f_gate, i_gate, o_gate, c_cand = {}, {}, {}, {}, {}, {}, {}, {}, {}
 
     hs[-1] = np.copy(hprev)
     cs[-1] = np.copy(cprev)
@@ -112,22 +117,28 @@ def forward(inputs, targets, memory):
 
         # compute the forget gate
         # f_gate = sigmoid (W_f \cdot [h X] + b_f)
+        f_gate[t] = sigmoid(np.dot(Wf, zs[t]) + bf)
 
         # compute the input gate
         # i_gate = sigmoid (W_i \cdot [h X] + b_i)
+        i_gate[t] = sigmoid(np.dot(Wi, zs[t]) + bi)
 
         # compute the candidate memory
         # \hat{c} = tanh (W_c \cdot [h X] + b_c])
+        c_cand[t] = np.tanh(np.dot(Wc, zs[t]) + bc)
 
         # new memory: applying forget gate on the previous memory
         # and then adding the input gate on the candidate memory
         # c_new = f_gate * prev_c + i_gate * \hat{c}
+        cs[t] = f_gate[t] * cs[t-1] + i_gate[t] * c_cand[t]
 
         # output gate
         # o_gate = sigmoid (Wo \cdot [h X] + b_o)
+        o_gate[t] = sigmoid(np.dot(Wo, zs[t]) + bo)
 
         # new hidden state for the LSTM
         # h = o_gate * tanh(c_new)
+        hs[t] = o_gate[t] * np.tanh(cs[t])
 
         # DONE LSTM
         # output layer - softmax and cross-entropy loss
