@@ -18,13 +18,11 @@ def sigmoid(x):
 
 # The derivative of the sigmoid function
 def dsigmoid(y):
-    y = sigmoid(y)
     return y * (1 - y)
 
 
 # The derivative of the tanh function
 def dtanh(x):
-    x = np.tanh(x)
     return 1 - x*x
 
 
@@ -183,6 +181,8 @@ def backward(activations, clipping=True):
 
     hs, cs, xs, zs, wes, os, ps, ys, f_gate, i_gate, o_gate, c_cand = activations
 
+
+
     # similar to the hidden states in the vanilla RNN
     # We need to initialize the gradients for these variables
     dhnext = np.zeros_like(hs[0])
@@ -237,6 +237,20 @@ def backward(activations, clipping=True):
         dbf += dc_f
         dbi += dc_i
         dbc += dc_c
+
+        # Update dhnext and dcnext
+        # ---------
+        # First, accumulate gradients of all gates to find gradient of x
+        dx_o = np.dot(Wo.T, dh_o) # output gate
+        dx_i = np.dot(Wi.T, dc_i) # input gate
+        dx_f = np.dot(Wf.T, dc_f) # forget gate
+        dx_c = np.dot(Wc.T, dc_c) # candidate memory
+
+        dx = dx_o + dx_i + dx_f + dx_c
+        dhnext = dx[:hidden_size]
+        # dcnext is the gradient of prev_c in 
+        # c_new = f_gate * prev_c + i_gate * \hat{c}
+        dcnext = f_gate[t] * dh_c
 
     if clipping:
         # clip to mitigate exploding gradients
