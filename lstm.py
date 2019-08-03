@@ -204,13 +204,33 @@ def backward(activations, clipping=True):
         # Calculate pre activation dh in regards to o_gate first
         # h = o_gate * tanh(c_new)
         dh_o = dsigmoid(zs[t]) * dh * np.tanh(cs[t]) 
+        dbo += dh_o # Update output bias
 
         # Calculate pre activation dh in regards to c_new next
         # h = o_gate * tanh(c_new)
-        # dcnext is added
+        # dcnext is added for compensating influence of last c
         dh_c = o_gate * dh * dtanh(cs[t]) + dcnext
 
-        
+        # Next, derive c_new = f_gate * prev_c + i_gate * \hat{c}
+        # ---------
+        # First, the gradient for f_gate
+        # f_gate = sigmoid (W_f \cdot [h X] + b_f)
+        dc_f = dsigmoid(f_gate[t]) * cs[t-1] * dh_c
+
+        # Second, the gradient for i_gate
+        # i_gate = sigmoid (W_i \cdot [h X] + b_i)
+        dc_i = dsigmoid(i_gate[t]) * c_cand[t] * dh_c
+
+        # Third, the gradient for \hat{c} = c_cand
+        # \hat{c} = tanh (W_c \cdot [h X] + b_c])
+        dc_c = dtanh(c_cand[t]) * i_gate[t] * dh_c
+
+
+        # Update the gate weights
+        # TODO Finish
+
+        # Update remaining biases
+        # TODO Finish
 
 
     if clipping:
