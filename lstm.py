@@ -240,17 +240,21 @@ def backward(activations, clipping=True):
 
         # Update dhnext and dcnext
         # ---------
-        # First, accumulate gradients of all gates to find gradient of x
-        dx_o = np.dot(Wo.T, dh_o) # output gate
-        dx_i = np.dot(Wi.T, dc_i) # input gate
-        dx_f = np.dot(Wf.T, dc_f) # forget gate
-        dx_c = np.dot(Wc.T, dc_c) # candidate memory
+        # First, accumulate gradients of all gates to find gradient of z
+        dz_o = np.dot(Wo.T, dh_o) # output gate
+        dz_i = np.dot(Wi.T, dc_i) # input gate
+        dz_f = np.dot(Wf.T, dc_f) # forget gate
+        dz_c = np.dot(Wc.T, dc_c) # candidate memory
 
-        dx = dx_o + dx_i + dx_f + dx_c
-        dhnext = dx[:hidden_size]
+        dz = dz_o + dz_i + dz_f + dz_c
+        dhnext = dz[:hidden_size]
         # dcnext is the gradient of prev_c in 
         # c_new = f_gate * prev_c + i_gate * \hat{c}
         dcnext = f_gate[t] * dh_c
+
+        # Finally, update dWex
+        dwes = dz[hidden_size:]
+        dWex += np.dot(dwes, xs[t].T) 
 
     if clipping:
         # clip to mitigate exploding gradients
