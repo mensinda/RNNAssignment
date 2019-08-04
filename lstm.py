@@ -210,7 +210,7 @@ def backward(activations, clipping=True):
         # Calculate pre activation dh in regards to c_new next
         # h = o_gate * tanh(c_new)
         # dcnext is added for compensating influence of last c
-        dh_c = o_gate[t] * dh * dtanh(cs[t]) + dcnext
+        dh_c = o_gate[t] * dh * dtanh(np.tanh(cs[t])) + dcnext
 
         # Next, derive c_new = f_gate * prev_c + i_gate * \hat{c}
         # ---------
