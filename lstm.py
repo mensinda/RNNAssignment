@@ -90,6 +90,7 @@ def forward(inputs, targets, memory):
     # hs: hidden states at timesteps
     # ys: output layers at timesteps (labels/targets)
     # ps: probability distributions at timesteps
+    # wes: word embeddings at timesteps
     # f_gate: forget gate activation at timesteps
     # i_gate: input gate activation at timesteps
     # o_gate: output gate activation at timesteps
@@ -195,7 +196,7 @@ def backward(activations, clipping=True):
         # the gradients of the unnormalized scores o
         do = ps[t] - ys[t]
 
-        # Same as before
+        # Same as in elman-rnn
         dWhy += np.dot(do, hs[t].T)
         dby += do
 
@@ -203,13 +204,23 @@ def backward(activations, clipping=True):
         # sum up gradients
         dh = np.dot(Why.T, do) + dhnext
 
-        # Calculate pre activation dh in regards to o_gate first
+        # Calculate pre-activation of o_gate within h first
         # h = o_gate * tanh(c_new)
+        # o_gate = sigmoid (Wo \cdot [h X] + b_o)
+        # ---------
+        # In order to gain the pre-activation state of o_gate,
+        # the derivative of the sigmoid needs to be used 
+        # on the saved value o_gate => dsigmoid(o_gate)
         dh_o = dsigmoid(o_gate[t]) * dh * np.tanh(cs[t])
 
-        # Calculate pre activation dh in regards to c_new next
+        # Calculate pre activation c_new within h next
         # h = o_gate * tanh(c_new)
-        # dcnext is added for compensating influence of last c
+        # c_new = f_gate * prev_c + i_gate * \hat{c}
+        # dcnext is added since there is a connection to the next c
+        # ---------
+        # Note that unlike the sigmoid, cs[t] is not saved in its activated form!
+        # This means that first, the value is run through the tanh before the
+        # tanh derivative is applied => dtanh(tanh(c_new))
         dh_c = o_gate[t] * dh * dtanh(np.tanh(cs[t])) + dcnext
 
         # Next, derive c_new = f_gate * prev_c + i_gate * \hat{c}
@@ -247,13 +258,22 @@ def backward(activations, clipping=True):
         dz_c = np.dot(Wc.T, dc_c) # candidate memory
 
         dz = dz_o + dz_i + dz_f + dz_c
+        # z = [h X] was saved as zs[t] = np.row_stack((hs[t-1], wes[t])),
+        # therefore the first hidden_size elements of dz
+        # are the next hidden weights
         dhnext = dz[:hidden_size]
+
         # dcnext is the gradient of prev_c in 
         # c_new = f_gate * prev_c + i_gate * \hat{c}
         dcnext = f_gate[t] * dh_c
 
         # Finally, update dWex
+        # ---------
+        # The word embeddings were the remaining elements of z = [h X]
+        # therefore dwes are the remaining elements of dz after dhnext
         dwes = dz[hidden_size:]
+        # As a last step, get the gradient dWex 
+        # wes[t] = np.dot(Wex, xs[t])
         dWex += np.dot(dwes, xs[t].T) 
 
     if clipping:
