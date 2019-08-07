@@ -116,7 +116,7 @@ def forward(inputs, targets, memory):
         # I will refer to this vector as [h X]
         zs[t] = np.row_stack((hs[t-1], wes[t]))
 
-        # YOUR IMPLEMENTATION should begin from here
+        # ------ LSTM IMPLEMENTATION START ------
 
         # compute the forget gate
         # f_gate = sigmoid (W_f \cdot [h X] + b_f)
@@ -143,7 +143,7 @@ def forward(inputs, targets, memory):
         # h = o_gate * tanh(c_new)
         hs[t] = o_gate[t] * np.tanh(cs[t])
 
-        # DONE LSTM
+        # ------ LSTM IMPLEMENTATION DONE ------
         # output layer - softmax and cross-entropy loss
         # unnormalized log probabilities for next chars
 
@@ -297,8 +297,8 @@ def sample(memory, seed_ix, n):
     result = []
 
     for t in range(n):
-        # IMPLEMENT THE FORWARD FUNCTION ONE MORE TIME HERE
-        # BUT YOU DON"T NEED TO STORE THE ACTIVATIONS
+        # The following implementation is equivalent to the forward pass,
+        # without the storage for the activations
 
         # convert word indices to word embeddings
         wes = np.dot(Wex, x)
